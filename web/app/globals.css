@@ -1,0 +1,78 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #fbfaf7;
+  color: #14213d;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e8e2d4;
+  border-radius: 14px;
+}
+
+.btn-primary {
+  background: #1f7a4d;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.6rem 1.1rem;
+  font-weight: 600;
+  transition: opacity 0.15s ease;
+}
+.btn-primary:hover {
+  opacity: 0.9;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: #14213d;
+  border: 1px solid #e8e2d4;
+  border-radius: 10px;
+  padding: 0.6rem 1.1rem;
+  font-weight: 500;
+}
+.btn-secondary:hover {
+  border-color: #14213d;
+}
+
+.input {
+  border: 1px solid #e8e2d4;
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  width: 100%;
+  background: #fff;
+}
+.input:focus {
+  outline: 2px solid #1f7a4d;
+  outline-offset: 1px;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #5a5747;
+  margin-bottom: 0.3rem;
+  display: block;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+.badge-draft { background: #eee; color: #666; }
+.badge-queued { background: #fff2d9; color: #9a6b00; }
+.badge-sent { background: #e3f3ea; color: #1f7a4d; }
+.badge-failed { background: #fbe6e1; color: #b5482b; }
