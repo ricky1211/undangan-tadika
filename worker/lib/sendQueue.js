@@ -31,6 +31,12 @@ async function processQueue(sock) {
     const item = doc.data();
     const jid = `${item.phone}@s.whatsapp.net`;
 
+    // Check if socket is open/connected before sending
+    if (!sock || !sock.ws || sock.ws.readyState !== 1) {
+      console.log("[queue] Koneksi WhatsApp tidak aktif, membatalkan pemrosesan batch.");
+      break;
+    }
+
     try {
       await db().collection("queue").doc(doc.id).set({ status: "processing" }, { merge: true });
 
@@ -68,26 +74,42 @@ async function processQueue(sock) {
       console.log(`[queue] Terkirim ke ${item.phone} (${item.type})`);
     } catch (err) {
       console.error(`[queue] Gagal kirim ke ${item.phone}:`, err.message);
-      const attempts = (item.attempts || 0) + 1;
+      
+      // Check if it is a connection/close error
+      const isConnError = 
+        err.message?.includes("close") || 
+        err.message?.includes("connection") || 
+        !sock || 
+        !sock.ws || 
+        sock.ws.readyState !== 1;
+
+      const attempts = isConnError ? item.attempts || 0 : (item.attempts || 0) + 1;
+      const status = (attempts >= 3 && !isConnError) ? "failed" : "pending";
+
       await db()
         .collection("queue")
         .doc(doc.id)
         .set(
           {
-            status: attempts >= 3 ? "failed" : "pending",
+            status,
             attempts,
             error: err.message,
           },
           { merge: true }
         );
 
-      if (attempts >= 3 && item.guestId && item.eventId && item.type === "invitation") {
+      if (status === "failed" && item.guestId && item.eventId && item.type === "invitation") {
         await db()
           .collection("events")
           .doc(item.eventId)
           .collection("guests")
           .doc(item.guestId)
           .set({ status: "failed" }, { merge: true });
+      }
+
+      if (isConnError) {
+        console.log("[queue] Terjadi kesalahan koneksi, membatalkan sisa antrian.");
+        break;
       }
     }
 

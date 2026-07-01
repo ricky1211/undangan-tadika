@@ -14,7 +14,7 @@ const { db } = require("./lib/firebaseAdmin");
 const { processQueue } = require("./lib/sendQueue");
 const { checkReminders } = require("./lib/reminder");
 
-const SESSION_DIR = path.join(__dirname, "session");
+const SESSION_DIR = process.env.SESSION_DIR || path.join(__dirname, "session");
 const logger = pino({ level: "warn" });
 
 let sock = null;
@@ -57,6 +57,8 @@ async function startWhatsApp() {
     }
 
     if (connection === "close") {
+      stopQueueLoop();
+      sock = null;
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
       console.log("Koneksi terputus.", statusCode, "reconnect:", shouldReconnect);
@@ -80,6 +82,14 @@ function startQueueLoop() {
       console.error("[queue] Error:", err.message);
     }
   }, 30 * 1000); // cek antrian tiap 30 detik
+}
+
+function stopQueueLoop() {
+  if (queueTimer) {
+    clearInterval(queueTimer);
+    queueTimer = null;
+    console.log("[queue] Antrian dihentikan (WhatsApp terputus).");
+  }
 }
 
 function startReminderCron() {
