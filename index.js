@@ -1,1 +1,0 @@
-require("./worker/index.js");
