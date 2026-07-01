@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { db } from "../../../../../lib/firebaseAdmin";
+import { db } from "../../../../lib/firebaseAdmin";
 
 function normalizePhone(raw) {
   let p = String(raw || "").trim().replace(/[^\d+]/g, "");
@@ -12,6 +12,11 @@ function normalizePhone(raw) {
 }
 
 export async function GET(req, { params }) {
+  const eventDoc = await db().collection("events").doc(params.id).get();
+  if (!eventDoc.exists) {
+    return NextResponse.json({ error: "Acara tidak ditemukan." }, { status: 404 });
+  }
+
   const snap = await db()
     .collection("events")
     .doc(params.id)
@@ -19,7 +24,11 @@ export async function GET(req, { params }) {
     .orderBy("name", "asc")
     .get();
   const guests = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  return NextResponse.json({ guests });
+
+  return NextResponse.json({
+    event: { id: eventDoc.id, ...eventDoc.data() },
+    guests,
+  });
 }
 
 // body: { guests: [{ name, phone }, ...] }
