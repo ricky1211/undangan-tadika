@@ -32,8 +32,9 @@ async function processQueue(sock) {
     const jid = `${item.phone}@s.whatsapp.net`;
 
     // Check if socket is open/connected before sending
-    if (!sock) {
-      console.log("[queue] Koneksi WhatsApp tidak aktif, membatalkan pemrosesan batch.");
+    const isSocketOpen = sock && sock.ws && sock.ws.socket && sock.ws.socket.readyState === 1;
+    if (!isSocketOpen) {
+      console.log("[queue] Koneksi WhatsApp tidak aktif (WebSocket closed), membatalkan pemrosesan batch.");
       break;
     }
 
@@ -76,12 +77,13 @@ async function processQueue(sock) {
       console.error(`[queue] Gagal kirim ke ${item.phone}:`, err.message);
       
       // Check if it is a connection/close error
+      const isSocketOpenAfterError = sock && sock.ws && sock.ws.socket && sock.ws.socket.readyState === 1;
       const isConnError = 
+        !isSocketOpenAfterError ||
         err.message?.includes("close") || 
         err.message?.includes("connection") || 
         err.message?.includes("not opened") ||
-        err.message?.includes("offline") ||
-        !sock;
+        err.message?.includes("offline");
 
       const attempts = isConnError ? item.attempts || 0 : (item.attempts || 0) + 1;
       const status = (attempts >= 3 && !isConnError) ? "failed" : "pending";
